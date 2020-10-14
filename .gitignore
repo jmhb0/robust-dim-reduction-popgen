@@ -12,3 +12,6 @@
 data/*
 !data/labels.csv
 !data/country-origins.csv
+# unignore results directory, but still ignore everything in it
+!results
+results/*

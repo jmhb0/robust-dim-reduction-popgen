@@ -11,8 +11,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 if __name__ == "__main__":
     # data
     print("Reading label data")
-    labels = pd.read_csv('{}/data/labels.tsv'.format(dir_path), sep='\t').set_index('indID')
-    labels['label'] = labels['label'].str.replace(' ','-')
+    labels = pd.read_csv('{}/data/labels.csv'.format(dir_path), sep=',').set_index('indID')
     sample_lookup = labels.copy() 
     print('Reading POPRES data')
     with open('{}/data/POPRES_non-reduced_phased_20.dat'.format(dir_path), 'rb') as pf:
