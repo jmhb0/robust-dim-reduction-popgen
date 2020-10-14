@@ -7,5 +7,8 @@
 !analysis.py
 !run-analysis.py
 !util.py
-!./data/labels.tsv
-!/results/
+# unignore data dir, but then reignore it so we can unigonroe some files in it
+!data
+data/*
+!data/labels.csv
+!data/country-origins.csv
