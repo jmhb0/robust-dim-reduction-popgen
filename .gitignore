@@ -1,0 +1,11 @@
+# Ignore all files and dir's with exceptions 
+*
+
+!README.md
+!requirements.txt
+!.gitignore
+!analysis.py
+!run-analysis.py
+!util.py
+!/data/labels.tsv
+!/results/
