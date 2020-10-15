@@ -11,7 +11,7 @@ import util
 dir_path = os.path.dirname(os.path.realpath(__file__))
 FNAME_DIST_MATRIX= '{}/data/df_M_dist.p'.format(dir_path)
 
-def run_pca_n_p_group(df, labels, n_samples_per_group=20):
+def run_pca_n_p_group(df, labels, fname_prefix, n_samples_per_group=20):
         # filter out removed samples
         labels = labels.loc[labels.index.intersection(df.index)]
         gb = labels.groupby(labels['label'])[['label']].count() > n_samples_per_group
@@ -27,13 +27,11 @@ def run_pca_n_p_group(df, labels, n_samples_per_group=20):
                 .values
 
         print("Doing PCA on {} per country samples, saving to {}/results/".format(n_samples_per_group, dir_path))
+        
         sample_countries =  labels.loc[sample_ids_n_p_country]
-        sample_countries.to_csv(
-                '{}/results/n_{}_p_country_sample_countries.csv'\
-                        .format(dir_path, n_samples_per_group))
-
+    
         df = df.loc[sample_ids_n_p_country]
-        util.do_pca_and_save(df, fname_prefix="n_{}_p_country".format(n_samples_per_group))
+        util.do_pca_and_save(df, fname_prefix=fname_prefix)
 
 def run_ica_averaged(df, labels):
     # Now do ICA on the mean of the signals . Recreate the data
@@ -60,18 +58,18 @@ def run_ica_not_averaged(df, labels):
     pd.DataFrame(countries).to_csv('{}/results/all_samples_ICA_countries.csv'.format(dir_path))
 
 
-def run_normalized_pca(df, labels):
+def run_normalized_pca(df, labels, fname_prefix='norm_pca-'):
     similarity_funcs = [lambda x: 1/x
                         , lambda x: 1/x**2
                         ]
-    fname_save_prefixes = ['norm_pca-inv_pow_1-no_filter', 'norm_pca-inv_pow_2-no_filter']
-    assert len(similarity_funcs) == len(fname_save_prefixes)
+    fname_save_names = ['norm_pca-inv_pow_1-no_filter', 'norm_pca-inv_pow_2-no_filter']
+    assert len(similarity_funcs) == len(fname_save_names)
     
     for i in range(len(similarity_funcs)):
         ret = util.do_normalized_pca(df, dist_func=similarity_funcs[i], fname_dist_matrix=FNAME_DIST_MATRIX,) 
         for k, v in ret.items():
             if k == 'PCs': continue
-            fname = "{}/results/{}_{}.dat".format(dir_path, fname_save_prefixes[i], k)
+            fname = "{}/results/{}-{}-{}.dat".format(dir_path, fname_prefix, fname_save_names[i], k)
             print("Saving {}".format(fname))
             np.savetxt(fname, v)
 

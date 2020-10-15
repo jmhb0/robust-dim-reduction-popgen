@@ -73,8 +73,12 @@ def do_pca_and_save(df, fname_prefix, n_compoments=10, include_eigenvectors=Fals
     for k, v in ret.items():
         if not include_eigenvectors and k=='PCs':
             continue
-        np.savetxt("{}/results/{}_{}.dat".format(dir_path, fname_prefix, k), v)
-    pd.Series(df.index).to_csv('{}/restuls/{}_indxs.csv'.format(dir_path, fname_prefix))
+        fname = "{}/results/{}-{}.dat".format(dir_path, fname_prefix, k)
+        print("Saving {}".format(fname))
+        np.savetxt(fname, v)
+    fname = '{}/results/{}-labels.csv'.format(dir_path, fname_prefix)
+    print("Saving {}".format(fname))
+    pd.Series(df.index).to_csv(fname)
 
 '''
 Take in entire dataset.
