@@ -4,14 +4,20 @@
 !README.md
 !requirements.txt
 !.gitignore
+!.gitattributes
+
 !analysis.py
 !run-analysis.py
 !util.py
+!map-results.ipynb
+
 # unignore data dir, but then reignore it so we can unigonroe some files in it
 !data
 data/*
 !data/labels.csv
 !data/country-origins.csv
+
 # unignore results directory, but still ignore everything in it
 !results
 results/*
+
