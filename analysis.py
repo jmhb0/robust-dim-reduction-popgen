@@ -62,7 +62,7 @@ def run_normalized_pca(df, labels, fname_prefix='norm_pca-'):
     similarity_funcs = [lambda x: 1/x
                         , lambda x: 1/x**2
                         ]
-    fname_save_names = ['norm_pca-inv_pow_1-no_filter', 'norm_pca-inv_pow_2-no_filter']
+    fname_save_names = ['norm_pca-inv_pow_1', 'norm_pca-inv_pow_2']
     assert len(similarity_funcs) == len(fname_save_names)
     
     for i in range(len(similarity_funcs)):
@@ -72,5 +72,7 @@ def run_normalized_pca(df, labels, fname_prefix='norm_pca-'):
             fname = "{}/results/{}-{}-{}.dat".format(dir_path, fname_prefix, fname_save_names[i], k)
             print("Saving {}".format(fname))
             np.savetxt(fname, v)
-
-
+        fname = "{}/results/{}-{}-labels.csv".format(dir_path, fname_prefix, fname_save_names[i])
+        print("Saving {}".format(fname))
+        pd.Series(df.index).to_csv(fname)
+        
