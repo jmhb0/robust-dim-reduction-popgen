@@ -14,10 +14,8 @@ FNAME_DIST_MATRIX = '{}/data/df_M_dist.p'.format(dir_path)
 '''
 def clean(df):
     data = df.values
-    is_variable_marker = np.where(
-            np.any(data != 0, axis=0)
-            )
-    data = data[:,is_variable_marker[0]]
+    mask = data.std(axis=0)!=0
+    data = data[:,mask]
     return pd.DataFrame(data=data, index=df.index)
 
 ''' df: DataFrame with index of sample labels.
