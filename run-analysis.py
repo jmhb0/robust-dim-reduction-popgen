@@ -35,15 +35,19 @@ if __name__ == "__main__":
     ### run different PCA versions
     # pca on all data points (having had outliers removed
     util.do_pca_and_save(df_post_outlier, 'pca-countries_gt_{}_n_samples-removed_outliers-no_other_filtering'.format(n_country_sample_size_gt))
+
     # pca on a random sample of 10 per country (this avoids overweighting countries)
     n_samples_per_group=20
     analysis.run_pca_n_p_group(df, labels, 
            fname_prefix="pca-countries_gt_{}_n_samples-removed_outliers-filter_{}_samples_p_cntry".format(n_country_sample_size_gt,  n_samples_per_group)
            , n_samples_per_group=n_samples_per_group)
+
     # normalized pca on all 
-    analysis.run_normalized_pca(df_pre_outlier, labels, fname_prefix='norm-countries_gt_{}_n_samples-pca-no_removed_outliers-no_other_filters'.format(n_country_sample_size_gt))
+    analysis.run_normalized_pca(df_pre_outlier, labels, fname_prefix='norm-pca-countries_gt_{}_n_samples-pca-no_removed_outliers-no_other_filters'.format(n_country_sample_size_gt))
 
-
+    # run supervised PCA
+    t=0
+    analysis.run_normalized_pca(df_pre_outlier, labels, fname_prefix='supervised_pca_t_{}-countries_gt_{}_n_samples-pca-no_removed_outliers-no_other_filters'.format(t, n_country_sample_size_gt), supervised=True, supervised_t=t)
 
     '''
     run_n_sample_pca=True

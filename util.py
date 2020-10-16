@@ -128,17 +128,42 @@ def build_distance_matrix(save_path=FNAME_DIST_MATRIX):
     df_M_dist.columns = df_M_dist.index
     df_M_dist.to_pickle(save_path)
 
+def get_supervised_t_weights(L_weight, labels, t):
+    assert 0 <= t <= 1
+    # array ith one row per country    
+    countries = labels.loc[L_weight.index]['label'] 
+    # create a different array where each integer corresponds to a particular country
+    # this is so we can use a numpy function on it
+    unique_countries = countries.unique()
+    indx_map = dict(zip(unique_countries, range(len(unique_countries))))
+    countries_indx = countries.map(indx_map).values
+    
+    # do 'equals' outer product. True in element (i,j) means they're from the same country
+    # this has the same dimension as L_weight 
+    t_mask = np.equal.outer(countries_indx, countries_indx)
+    # elements wuth the same label are multiplied by t. Else multiplied by 1.
+    t_multiplier = np.where(t_mask, t, 1)
+    return L_weight*t_multiplier
+
 ''' fname_dist_matrix- must be a pickled dataframe st shape is square, symmetric
         is in the format saved in `build_distance_matrix`
     df - some data frame of patient data
 '''
-def do_normalized_pca(df, fname_dist_matrix=FNAME_DIST_MATRIX, dist_func=lambda x: 1/x):
+def do_normalized_pca(df, fname_dist_matrix=FNAME_DIST_MATRIX, dist_func=lambda x: 1/x
+        , supervised=False, supervised_t=0, labels=None):
     # read in distance matrix and restrict to only those samples in df.index (row and column)
     df_dist = pd.read_pickle(fname_dist_matrix)
     df_dist = df_dist.loc[df.index][df.index]
 
     L_weight = dist_func(df_dist)
     L_weight[L_weight==np.inf] = 0   # send inf's to zero
+
+    # do supervised PCA adjustment if applicable
+    if supervised:
+        if labels is None:
+            raise ValueError("If running supervised=True, must supply labels lookup table")
+        L_weight = get_supervised_t_weights(L_weight, labels, t=supervised_t)
+
     np.fill_diagonal(L_weight.values, -L_weight.sum())
     L_weight = cov_nearest(-L_weight)
     L = np.linalg.cholesky(L_weight)
