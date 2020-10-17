@@ -43,7 +43,9 @@ if __name__ == "__main__":
            , n_samples_per_group=n_samples_per_group)
 
     # normalized pca on all 
-    analysis.run_normalized_pca(df_pre_outlier, labels, fname_prefix='norm-pca-countries_gt_{}_n_samples-pca-no_removed_outliers-no_other_filters'.format(n_country_sample_size_gt))
+    fname_df_dist = '{}/data/df_M_dist.p'.format(dir_path)
+    df_dist = pd.read_pickle(fname_df_dist)
+    analysis.run_normalized_pca(df_pre_outlier, df_dist, labels, fname_prefix='norm-pca-countries_gt_{}_n_samples-pca-no_removed_outliers-no_other_filters'.format(n_country_sample_size_gt))
 
     # run supervised PCA
     t=0

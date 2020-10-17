@@ -115,18 +115,13 @@ def outlier_detection(df, sample_lookup, sigma=6, n_iter=5, n_pca_components=10)
 This takes a long time to run. For n samlples, it's O(n^3)
 So it runs and pickles the result.
 """
-def build_distance_matrix(save_path=FNAME_DIST_MATRIX):
-    with open('{}/POPRES_non-reduced_phased_20.dat'.format(dir_path), 'rb') as pf:
-        data = pickle.load(pf)
-
-    labels = pd.read_csv('./data/labels.tsv', sep='\t').set_index('indID')
-    df = pd.DataFrame(data=data, index=labels.index)
-
-    M_dist = pdist(M, 'minkowski', p=2.)
+def build_distance_matrix(df, labels):
+    M_dist = pdist(df.values, 'minkowski', p=2.)
     M_dist_m = squareform(M_dist)
     df_M_dist = pd.DataFrame(data=M_dist_m, index=df.index)
     df_M_dist.columns = df_M_dist.index
-    df_M_dist.to_pickle(save_path)
+    # df_M_dist.to_pickle(save_path)
+    return df_M_dist
 
 def get_supervised_t_weights(L_weight, labels, t):
     assert 0 <= t <= 1
@@ -149,10 +144,10 @@ def get_supervised_t_weights(L_weight, labels, t):
         is in the format saved in `build_distance_matrix`
     df - some data frame of patient data
 '''
-def do_normalized_pca(df, fname_dist_matrix=FNAME_DIST_MATRIX, dist_func=lambda x: 1/x
+def do_normalized_pca(df, df_dist, fname_dist_matrix=FNAME_DIST_MATRIX, dist_func=lambda x: 1/x
         , supervised=False, supervised_t=0, labels=None):
     # read in distance matrix and restrict to only those samples in df.index (row and column)
-    df_dist = pd.read_pickle(fname_dist_matrix)
+    # df_dist = pd.read_pickle(fname_dist_matrix)
     df_dist = df_dist.loc[df.index][df.index]
 
     L_weight = dist_func(df_dist)

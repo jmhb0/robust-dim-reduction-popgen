@@ -58,7 +58,7 @@ def run_ica_not_averaged(df, labels):
     pd.DataFrame(countries).to_csv('{}/results/all_samples_ICA_countries.csv'.format(dir_path))
 
 
-def run_normalized_pca(df, labels, fname_prefix='norm_pca-', supervised=False, supervised_t=0):
+def run_normalized_pca(df, df_dist, labels, fname_prefix='norm_pca-', supervised=False, supervised_t=0):
     similarity_funcs = [lambda x: 1/x
                         , lambda x: 1/x**2
                         ]
@@ -66,7 +66,7 @@ def run_normalized_pca(df, labels, fname_prefix='norm_pca-', supervised=False, s
     assert len(similarity_funcs) == len(fname_save_names)
     
     for i in range(len(similarity_funcs)):
-        ret = util.do_normalized_pca(df, dist_func=similarity_funcs[i], fname_dist_matrix=FNAME_DIST_MATRIX,
+        ret = util.do_normalized_pca(df, df_dist, dist_func=similarity_funcs[i], fname_dist_matrix=FNAME_DIST_MATRIX,
                 supervised=supervised, supervised_t=supervised_t, labels=labels) 
         for k, v in ret.items():
             if k == 'PCs': continue
