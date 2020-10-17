@@ -44,6 +44,8 @@ Assumes the input matrix is already centred and scaled
 return: vector with shape (dimensions, n_components)
 '''
 def do_pca(M, n_components=10, random_state=0):
+    if len(M)-1 < n_components:
+        n_components=len(M)-1
     svd = TruncatedSVD(n_components=n_components, random_state=random_state)
     PC_projection = svd.fit(M).transform(M)
     PCs = svd.components_
