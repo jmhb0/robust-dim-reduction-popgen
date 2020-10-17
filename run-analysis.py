@@ -21,6 +21,9 @@ if __name__ == "__main__":
     # construct dataframe 
     df = pd.DataFrame(data=data, index=sample_lookup.index)
 
+    # code to generate the rotated matri
+    # util.do_data_rotation_and_save(df)
+
     # read the data post change-of-basis 
     M_cb = np.loadtxt('{}/data/POPRES_data_rotated.p'.format(dir_path))
     df_cb = pd.DataFrame(M_cb, index=df.index)
@@ -66,7 +69,8 @@ if __name__ == "__main__":
     analysis.run_normalized_pca(df_pre_outlier, df_dist, labels, fname_prefix='cb_old_dist_matrix-norm-pca-countries_gt_{}_n_samples-pca-no_removed_outliers-no_other_filters'.format(n_country_sample_size_gt))
     '''
 
-    # Do the weighted PCA stuff
+    # Do ratio optimization problems 
+
 
 
     '''

@@ -42,14 +42,15 @@ def build_matrix(data):
 Doin the rotation takes a minute, so here we save the result.
 '''
 def do_data_rotation_and_save(df, fname='{}/data/POPRES_data_rotated.p'.format(dir_path)):
-    M = util.build_matrix(
-            util.clean(df)
+    M = build_matrix(
+            clean(df)
             )
     n=len(M)-1
     svd_cb  = TruncatedSVD(n_components=n).fit(M)
     V = svd_cb.components_
     M_cb = M.dot(V.T)
-    np.savetxt(M_cb, fname)
+    print(M_cb.shape)
+    np.savetxt(fname, M_cb)
 
 '''
 Assumes the input matrix is already centred and scaled
