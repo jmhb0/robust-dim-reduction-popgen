@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pickle
 from sklearn.decomposition import TruncatedSVD, FastICA
-from scipy.spatial.distance import pdist, squareform
+from sklearn.metrics.pairwise import euclidean_distances
 from statsmodels.stats.correlation_tools import cov_nearest
 import os
 import sys
@@ -128,11 +128,12 @@ def outlier_detection(df, sample_lookup, sigma=6, n_iter=5, n_pca_components=10)
 This takes a long time to run. For n samlples, it's O(n^3)
 So it runs and pickles the result.
 """
-def build_distance_matrix(df, labels):
-    M_dist = pdist(df.values, 'minkowski', p=2.)
-    M_dist_m = squareform(M_dist)
-    df_M_dist = pd.DataFrame(data=M_dist_m, index=df.index)
-    df_M_dist.columns = df_M_dist.index
+def build_distance_matrix(df):
+    M = build_matrix(clean(df))
+    M_dist = euclidean_distances(M, M)
+    df_M_dist = pd.DataFrame(data=M_dist
+            , index=df.index
+            , columns=df.index)
     # df_M_dist.to_pickle(save_path)
     return df_M_dist
 
