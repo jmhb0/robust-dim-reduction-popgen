@@ -13,10 +13,10 @@ FNAME_DIST_MATRIX = '{}/data/df_M_dist.p'.format(dir_path)
 ''' remove any alleles that are the same across all samples
 '''
 def clean(df):
-    data = df.values
-    mask = data.std(axis=0)!=0
-    data = data[:,mask]
-    return pd.DataFrame(data=data, index=df.index)
+    d=df.values
+    mask = np.std(d, axis=0, dtype=np.float16)!=0
+    d = d[:,mask]
+    return pd.DataFrame(d, index=df.index)
 
 ''' df: DataFrame with index of sample labels.
 '''
@@ -31,13 +31,13 @@ def filter_countries_lt_n_samples(df, n, sample_lookup):
             .drop('label', axis=1)
     return df
 
-def build_matrix(data):
-    if isinstance(data, pd.DataFrame):
-        data = data.values
-    mean, std = data.mean(axis=0), data.std(axis=0)
-    M = (data-mean)/std
+def build_matrix(d):
+    if isinstance(d, pd.DataFrame):
+        d = d.values
+    mean = np.mean(d, axis=0, dtype=np.float16)
+    std = np.std(d, axis=0, dtype=np.float16)
+    M = (d-mean)/std
     return M
-
 '''Genetic data is wide. But by an SVD change of basis, we can make it n\times n
 Doin the rotation takes a minute, so here we save the result.
 '''
@@ -51,6 +51,15 @@ def do_data_rotation_and_save(df, fname='{}/data/POPRES_data_rotated.p'.format(d
     M_cb = M.dot(V.T)
     print(M_cb.shape)
     np.savetxt(fname, M_cb)
+
+def symmetrize(d):
+    """
+    Copy the lower triangle into the upper triangle, keeping diagonal the same
+    Operates in place and returns d.
+    """
+    d *= np.tri(d.shape[0])
+    d = d+d.T-np.diag(np.diag(d))
+    return d
 
 '''
 Assumes the input matrix is already centred and scaled
@@ -135,9 +144,18 @@ def build_distance_matrix(df):
             , index=df.index
             , columns=df.index)
     # df_M_dist.to_pickle(save_path)
-    return df_M_dist
+    return symmetrize(df_M_dist)
 
-def get_supervised_t_weights(L_weight, labels, t):
+def get_supervised_t_weights(L_weight, labels, t=0):
+    """
+    Return a modified L_weight matrix based on data labels. 
+    For L_weight[i,j] if index i,j have the same class return t,
+        else return t. 
+    Require 0 <= t<= 1
+    Default t=0 means the 'distance' between points will be zero.
+    If t=1, then the final Laplacian is unchanged (the supervising has no effect)
+    We can set t anywhere in this range.
+    """
     assert 0 <= t <= 1
     # array ith one row per country    
     countries = labels.loc[L_weight.index]['label'] 
@@ -158,11 +176,12 @@ def get_supervised_t_weights(L_weight, labels, t):
         is in the format saved in `build_distance_matrix`
     df - some data frame of patient data
 '''
-def do_normalized_pca(df, df_dist, fname_dist_matrix=FNAME_DIST_MATRIX, dist_func=lambda x: 1/x
+def do_normalized_pca(df, df_dist, fname_dist_matrix=FNAME_DIST_MATRIX, dist_func=lambda x: 1/x**2
         , supervised=False, supervised_t=0, labels=None):
     # read in distance matrix and restrict to only those samples in df.index (row and column)
     # df_dist = pd.read_pickle(fname_dist_matrix)
-    df_dist = df_dist.loc[df.index][df.index]
+    df.index.difference(df_dist.index).size==0 \
+        and df_dist.index.difference(df.index).size==0
 
     L_weight = dist_func(df_dist)
     L_weight[L_weight==np.inf] = 0   # send inf's to zero
@@ -172,9 +191,16 @@ def do_normalized_pca(df, df_dist, fname_dist_matrix=FNAME_DIST_MATRIX, dist_fun
         if labels is None:
             raise ValueError("If running supervised=True, must supply labels lookup table")
         L_weight = get_supervised_t_weights(L_weight, labels, t=supervised_t)
+        L_weight=symmetrize(L_weight)
 
     np.fill_diagonal(L_weight.values, -L_weight.sum())
-    L_weight = cov_nearest(-L_weight)
+    L_weight = -L_weight
+    L_weight = cov_nearest(symmetrize(L_weight))
+    # https://www.sciencedirect.com/science/article/pii/0024379588902236?via%3Dihub 
+    smallest_eigenvalue = min(np.linalg.eig(L_weight)[0][0], 0)
+    # print('smallest eig', smallest_eigenvalue)
+    L_weight = L_weight + abs(smallest_eigenvalue)*10*np.identity(len(L_weight))
+
     L = np.linalg.cholesky(L_weight)
 
     # clean non-variant alleles from df and build matrix
