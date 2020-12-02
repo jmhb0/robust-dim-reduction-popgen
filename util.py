@@ -6,6 +6,7 @@ from sklearn.metrics.pairwise import euclidean_distances
 from statsmodels.stats.correlation_tools import cov_nearest
 import os
 import sys
+import logging
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 FNAME_DIST_MATRIX = '{}/data/df_M_dist.p'.format(dir_path)
@@ -136,15 +137,20 @@ def outlier_detection(df, sample_lookup, sigma=6, n_iter=5, n_pca_components=10)
 """
 This takes a long time to run. For n samlples, it's O(n^3)
 So it runs and pickles the result.
+Important to run `clean` and `build_matrix` so that the distance 
+is the same one that is actually analyzed in PCA. 
 """
-def build_distance_matrix(df):
+def build_distance_matrix(df, save_path=None):
     M = build_matrix(clean(df))
     M_dist = euclidean_distances(M, M)
     df_M_dist = pd.DataFrame(data=M_dist
             , index=df.index
             , columns=df.index)
-    # df_M_dist.to_pickle(save_path)
-    return symmetrize(df_M_dist)
+    df_M_dist = symmetrize(df_M_dist)
+    if save_path is not None:
+        logger.info("Saving distance matrix to {}".format(save_path))
+        df_M_dist.to_pickle(save_path)
+    return df_M_dist 
 
 def get_supervised_t_weights(L_weight, labels, t=0):
     """
@@ -172,12 +178,13 @@ def get_supervised_t_weights(L_weight, labels, t=0):
     t_multiplier = np.where(t_mask, t, 1)
     return L_weight*t_multiplier
 
-''' fname_dist_matrix- must be a pickled dataframe st shape is square, symmetric
+def do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2
+        , supervised=False, supervised_t=0, labels=None):
+    ''' 
+    fname_dist_matrix- must be a pickled dataframe st shape is square, symmetric
         is in the format saved in `build_distance_matrix`
     df - some data frame of patient data
-'''
-def do_normalized_pca(df, df_dist, fname_dist_matrix=FNAME_DIST_MATRIX, dist_func=lambda x: 1/x**2
-        , supervised=False, supervised_t=0, labels=None):
+    '''
     # read in distance matrix and restrict to only those samples in df.index (row and column)
     # df_dist = pd.read_pickle(fname_dist_matrix)
     df.index.difference(df_dist.index).size==0 \
@@ -195,11 +202,20 @@ def do_normalized_pca(df, df_dist, fname_dist_matrix=FNAME_DIST_MATRIX, dist_fun
 
     np.fill_diagonal(L_weight.values, -L_weight.sum())
     L_weight = -L_weight
-    L_weight = cov_nearest(symmetrize(L_weight))
-    # https://www.sciencedirect.com/science/article/pii/0024379588902236?via%3Dihub 
-    smallest_eigenvalue = min(np.linalg.eig(L_weight)[0][0], 0)
-    # print('smallest eig', smallest_eigenvalue)
-    L_weight = L_weight + abs(smallest_eigenvalue)*10*np.identity(len(L_weight))
+    L_weight = cov_nearest(L_weight)
+
+    # Code to handle the case that cov_nearest gives a matrix with one very small negative
+    # eigenvalue, that makes the matrix not PSD
+    # Solution is to add epsilon-Identity, where epsilon is magnitude of the smallest eig
+    # but only do this if the perturbation this would cause is very small, as measured by
+    # the smallest diagonal. If it would cause a big perturbation, throw an error
+    eigs, _ = np.linalg.eig(L_weight)
+    smallest_eig = min(eigs[0], 0)
+    smallest_diag = np.min(np.diag(L_weight))
+    rel_perturbation = abs(smallest_eig / smallest_diag)
+    if rel_perturbation > 1e-5:
+        raise ValueError("L_weight is non-neglegibly far from the PSD cone")
+    L_weight = L_weight + abs(smallest_eig)*10*np.identity(len(L_weight))
 
     L = np.linalg.cholesky(L_weight)
 
