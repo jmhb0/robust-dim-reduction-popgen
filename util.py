@@ -15,7 +15,7 @@ FNAME_DIST_MATRIX = '{}/data/df_M_dist.p'.format(dir_path)
 '''
 def clean(df):
     d=df.values
-    mask = np.std(d, axis=0, dtype=np.float16)!=0
+    mask = np.std(d, axis=0, dtype=np.float32)!=0
     d = d[:,mask]
     return pd.DataFrame(d, index=df.index)
 
@@ -35,8 +35,8 @@ def filter_countries_lt_n_samples(df, n, sample_lookup):
 def build_matrix(d):
     if isinstance(d, pd.DataFrame):
         d = d.values
-    mean = np.mean(d, axis=0, dtype=np.float16)
-    std = np.std(d, axis=0, dtype=np.float16)
+    mean = np.mean(d, axis=0, dtype=np.float32)
+    std = np.std(d, axis=0, dtype=np.float32)
     M = (d-mean)/std
     return M
 '''Genetic data is wide. But by an SVD change of basis, we can make it n\times n
@@ -222,7 +222,7 @@ def do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2
     # clean non-variant alleles from df and build matrix
     df = clean(df)
     M = build_matrix(df)
-    A = L.dot(M)
+    A = L.T.dot(M)
 
     ret_pca = do_pca(A, n_components=10)
     return ret_pca
