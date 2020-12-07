@@ -222,7 +222,7 @@ def do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2
     # clean non-variant alleles from df and build matrix
     df = clean(df)
     M = build_matrix(df)
-    A = L.T.dot(M)
+    A = L.dot(M)
 
     ret_pca = do_pca(A, n_components=10)
     return ret_pca
