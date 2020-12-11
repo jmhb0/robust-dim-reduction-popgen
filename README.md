@@ -27,7 +27,7 @@ All dimension reduction methods return a dictionary, `res`. They are paramateriz
 - `PCs`: array shape `(n_components,n)`. The vectors onto which we have linear projections. 
 - `eig_vals`: array shape `(n_components,)`. The eigenvalues of the PCA eigenproblem, which is also the portion of explained variance. 
 
-## Normalized PCA 
+# Normalized PCA 
 Do:
 ```
 res_norm = util.do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2)
@@ -39,14 +39,14 @@ The method `dist_func`, takes a float (the pairwise distance between two points,
 Note: The method does an estimation of a certain covariance matrix, but numerical error may cause it to be no longer PSD. This is corrected for, but if this matrix is too far from the PSD cone an exception is raised. 
 
 
-## Supervized PCA 
+# Supervized PCA 
 Call the same method but with different arguments.
 ```
 res_sup = util.do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2, supervized=True, supervised_t=0)
 ```
 `supervised_t` must be between 0 and 1. If using 1, this reduces to just regular normalized PCA. 
 
-## Classic PCA 
+# Classic PCA 
 Warning: this does not do centering or normalizing. (It doesn't make sense to do PCA without centering, but it may make sense to not scale). 
 ```
 res_pca = util.do_pca(df)
