@@ -2,6 +2,10 @@ Implement methods from paper
 > Koren, Y. and Carmel, L., 2004. Robust linear dimensionality reduction. IEEE transactions on visualization and computer graphics, 10(4), pp.459-470.
 Intended for population genetic studies. 
 
+Created of population genetics applications, for example [POPRES](https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000145.v4.p2).
+
+Also see [memory-usage.ipynb](memory-usage.ipynb) on memory usage for large genomic datasets
+
 # Data and objects 
 Take a array, `data` with with shape `(m,n)`, that is `m` samples and `n` alleles (features) that are 0 or 1. 
 Take a list of sample names, `indxs` (can default to just range), and create a DataFrame:
