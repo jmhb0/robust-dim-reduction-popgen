@@ -4,6 +4,7 @@ import pickle
 from sklearn.decomposition import TruncatedSVD, FastICA
 from sklearn.metrics.pairwise import euclidean_distances
 from statsmodels.stats.correlation_tools import cov_nearest
+from math import radians, sin, cos, asin, sqrt
 import os
 import sys
 import logging
@@ -226,3 +227,41 @@ def do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2
 
     ret_pca = do_pca(A, n_components=10)
     return ret_pca
+
+def haversine_points(lat1, lon1, lat2, lon2):
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    return 2 * 6371 * asin(sqrt(a))
+
+def haversine_coords(pnt_1, pnt_2):
+    return haversine_points(*pnt_1, *pnt_2)
+
+def build_dist_matrix_by_geo_distance(df, df_labels, country_lookup):
+    """
+    Create a distance matrix, where instead of geographic distance, we have n
+    Depends on Haversine distance computation
+    """
+    # build `df_dist_countries` showing Haversine dist between cities
+    n=len(country_lookup)
+    c_dist = np.zeros((n,n))
+    for i in range(n):
+        pnt1 = country_lookup.iloc[i][['Latitude','Longitude']].values
+        for j in range(n):
+            pnt2 = country_lookup.iloc[j][['Latitude','Longitude']].values
+            c_dist[i,j] = haversine_coords(pnt1, pnt2)
+    df_dist_countries = pd.DataFrame(c_dist, index=country_lookup.index
+                        , columns=country_lookup.index)
+
+    # build distance matrix between samples, where their location is
+    # the country location
+    n=len(df)
+    d_dist = np.zeros((n,n))
+    for i in range(n):
+        cntry = df_labels.iloc[i]['label']
+        distance_lookup = df_dist_countries[cntry]
+        # assign the whole row of distances
+        d_dist[i] = distance_lookup.loc[df_labels['label']]
+    return pd.DataFrame(d_dist, index=df.index, columns=df.index)
+
