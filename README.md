@@ -46,7 +46,8 @@ Note: The method does an estimation of a certain covariance matrix, but numerica
 # Supervized PCA 
 Call the same method but with different arguments.
 ```
-res_sup = util.do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2, supervized=True, supervised_t=0)
+res_sup = util.do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2
+    , supervized=True, supervised_t=0, labels=df_labels)
 ```
 `supervised_t` must be between 0 and 1. If using 1, this reduces to just regular normalized PCA. 
 
