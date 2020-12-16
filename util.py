@@ -190,7 +190,7 @@ def do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2
     # df_dist = pd.read_pickle(fname_dist_matrix)
     df.index.difference(df_dist.index).size==0 \
         and df_dist.index.difference(df.index).size==0
-
+    
     L_weight = dist_func(df_dist)
     L_weight[L_weight==np.inf] = 0   # send inf's to zero
 
@@ -201,6 +201,7 @@ def do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2
         L_weight = get_supervised_t_weights(L_weight, labels, t=supervised_t)
         L_weight=symmetrize(L_weight)
 
+    np.fill_diagonal(L_weight.values, 0)
     np.fill_diagonal(L_weight.values, -L_weight.sum())
     L_weight = -L_weight
     L_weight = cov_nearest(L_weight)
