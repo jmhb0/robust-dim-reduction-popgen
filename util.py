@@ -78,6 +78,7 @@ def do_pca(M, n_components=10, random_state=0):
             'PC_projection':PC_projection
             , 'PCs':PCs
             ,'eig_vals':eig_vals
+            , 'model':svd
             }
 
 def do_ica(M, n_components, random_state=0):
@@ -179,12 +180,14 @@ def get_supervised_t_weights(L_weight, labels, t=0):
     t_multiplier = np.where(t_mask, t, 1)
     return L_weight*t_multiplier
 
-def do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2
+def do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2, do_build_and_clean=True
         , supervised=False, supervised_t=0, labels=None):
     ''' 
     fname_dist_matrix- must be a pickled dataframe st shape is square, symmetric
         is in the format saved in `build_distance_matrix`
     df - some data frame of patient data
+    `do_build_and_clean`: if False, do not do centring or normalizing. The caller must 
+    at least do centering on `df` in this case first, otherwise the results don't make sense
     '''
     # read in distance matrix and restrict to only those samples in df.index (row and column)
     # df_dist = pd.read_pickle(fname_dist_matrix)
@@ -222,8 +225,10 @@ def do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2
     L = np.linalg.cholesky(L_weight)
 
     # clean non-variant alleles from df and build matrix
-    df = clean(df)
-    M = build_matrix(df)
+    if do_build_and_clean:
+        M = build_matrix(util.clean(df))
+    else:
+        M=df.values
     A = L.dot(M)
 
     ret_pca = do_pca(A, n_components=10)
