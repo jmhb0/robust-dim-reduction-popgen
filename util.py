@@ -226,7 +226,7 @@ def do_normalized_pca(df, df_dist, dist_func=lambda x: 1/x**2, do_build_and_clea
 
     # clean non-variant alleles from df and build matrix
     if do_build_and_clean:
-        M = build_matrix(util.clean(df))
+        M = build_matrix(clean(df))
     else:
         M=df.values
     A = L.dot(M)
